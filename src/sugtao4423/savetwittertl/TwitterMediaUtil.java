@@ -10,12 +10,12 @@ import twitter4j.MediaEntity.Variant;
 
 public class TwitterMediaUtil{
 
-	private ArrayList<String> urls;
+	private ArrayList<String> mediaUrls;
 	private String content;
 
 	public TwitterMediaUtil(Status status){
 		content = status.getText();
-		urls = new ArrayList<String>();
+		mediaUrls = new ArrayList<String>();
 
 		URLEntity[] uentitys = status.getURLEntities();
 		if(uentitys != null && uentitys.length > 0){
@@ -30,11 +30,12 @@ public class TwitterMediaUtil{
 				if(isVideoOrGif(media)){
 					String videoUrl = getVideoURLsSortByBitrate(mentitys);
 					if(videoUrl != null){
-						urls.add(videoUrl);
+						mediaUrls.add(videoUrl);
 					}
 				}else{
-					urls.add(media.getMediaURL());
+					mediaUrls.add(media.getMediaURL());
 				}
+				content = content.replace(media.getURL(), "");
 			}
 		}
 		
@@ -45,8 +46,8 @@ public class TwitterMediaUtil{
 
 	}
 
-	public ArrayList<String> getUrls(){
-		return urls;
+	public ArrayList<String> getMediaUrls(){
+		return mediaUrls;
 	}
 
 	public String getContent(){

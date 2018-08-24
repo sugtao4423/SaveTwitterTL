@@ -96,7 +96,7 @@ public class SaveTwitterTL{
 
 		TwitterMediaUtil mediaUtil = new TwitterMediaUtil(status);
 		String content = mediaUtil.getContent();
-		ArrayList<String> mediaUrls = mediaUtil.getUrls();
+		ArrayList<String> mediaUrls = mediaUtil.getMediaUrls();
 		String medias = implode(mediaUrls, ",");
 		String date = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss Z").format(status.getCreatedAt());
 		String via = status.getSource().replaceAll("<.+?>", "");
