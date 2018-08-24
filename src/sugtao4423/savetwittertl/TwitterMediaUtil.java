@@ -20,7 +20,7 @@ public class TwitterMediaUtil{
 		URLEntity[] uentitys = status.getURLEntities();
 		if(uentitys != null && uentitys.length > 0){
 			for(URLEntity u : uentitys){
-				content = content.replace(u.getDisplayURL(), u.getExpandedURL());
+				content = content.replace(u.getURL(), u.getExpandedURL());
 			}
 		}
 
@@ -36,6 +36,11 @@ public class TwitterMediaUtil{
 					urls.add(media.getMediaURL());
 				}
 			}
+		}
+		
+		URLEntity quoteEntity = status.getQuotedStatusPermalink();
+		if(quoteEntity != null){
+			content = content.replace(quoteEntity.getURL(), quoteEntity.getExpandedURL());
 		}
 
 	}
