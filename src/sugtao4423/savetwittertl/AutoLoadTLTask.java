@@ -19,18 +19,20 @@ public class AutoLoadTLTask extends TimerTask{
 	private long listAsTL;
 	private OnStatusListener listener;
 
-	private long latestTweetId = -1L;
+	private long latestTweetId;
 
 	public AutoLoadTLTask(Twitter twitter, long listAsTL, OnStatusListener listener){
 		this.twitter = twitter;
 		this.listAsTL = listAsTL;
 		this.listener = listener;
+		this.latestTweetId = -1L;
 	}
 
 	@Override
 	public void run(){
 		try{
-			Paging paging = latestTweetId < 0 ? new Paging(1, 200) : new Paging(1, 200).sinceId(latestTweetId - 1);
+			Paging paging = new Paging(1, 200);
+			paging = latestTweetId > 0 ? paging.sinceId(latestTweetId - 1) : paging;
 
 			ResponseList<Status> statuses;
 			if(listAsTL < 0){
@@ -38,18 +40,17 @@ public class AutoLoadTLTask extends TimerTask{
 			}else{
 				statuses = twitter.getUserListStatuses(listAsTL, paging);
 
-				if(latestTweetId > 0){
-					for(int i = 2; i < 10; i++){
-						if(statuses.size() <= 0){
-							break;
-						}
-						if(isIncludeLatestTweetId(statuses)){
-							statuses = removeLatestTweet(statuses);
-							break;
-						}
-						paging = new Paging(i, 200).sinceId(latestTweetId - 1);
-						statuses.addAll(twitter.getUserListStatuses(listAsTL, paging));
+				for(int i = 2; i <= 10; i++){
+					if(statuses.size() <= 0){
+						break;
 					}
+					if(isIncludeLatestTweetId(statuses)){
+						statuses = removeLatestTweet(statuses);
+						break;
+					}
+					paging = new Paging(i, 200);
+					paging = latestTweetId > 0 ? paging.sinceId(latestTweetId - 1) : paging;
+					statuses.addAll(twitter.getUserListStatuses(listAsTL, paging));
 				}
 			}
 
