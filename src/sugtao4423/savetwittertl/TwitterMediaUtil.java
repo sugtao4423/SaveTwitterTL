@@ -33,7 +33,7 @@ public class TwitterMediaUtil{
 						mediaUrls.add(videoUrl);
 					}
 				}else{
-					mediaUrls.add(media.getMediaURL());
+					mediaUrls.add(media.getMediaURLHttps());
 				}
 				content = content.replace(media.getURL(), "");
 			}
