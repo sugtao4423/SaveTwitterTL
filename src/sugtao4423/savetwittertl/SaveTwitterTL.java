@@ -105,11 +105,11 @@ public class SaveTwitterTL{
 	}
 
 	public static void insertTweet(User user, String content, String date, String via, String medias, long tweetId){
-		content = content.replace("'", "''");
-		String screenName = user.getScreenName().replace("'", "''");
+		content = content.replaceAll("'", "''");
+		String screenName = user.getScreenName().replaceAll("'", "''");
 		long userId = user.getId();
-		via = via.replace("'", "''");
-		medias = medias.replace("'", "''");
+		via = via.replaceAll("'", "''");
+		medias = medias.replaceAll("'", "''");
 		String sql = "INSERT INTO tweets VALUES(" +
 					"'" + content + "'," +
 					userId + "," +
