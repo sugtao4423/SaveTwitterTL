@@ -128,6 +128,9 @@ public class SaveTwitterTL{
 					String addVia = "INSERT INTO vialist(via) VALUES('" + via + "')";
 					try{
 						stmt.execute(addUser);
+					}catch(SQLException e1){
+					}
+					try{
 						stmt.execute(addVia);
 					}catch(SQLException e1){
 					}
