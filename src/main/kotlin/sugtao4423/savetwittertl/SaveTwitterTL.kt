@@ -8,7 +8,6 @@ import java.io.IOException
 import java.sql.Connection
 import java.sql.DriverManager
 import java.sql.SQLException
-import java.sql.Statement
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -19,7 +18,6 @@ fun main(@Suppress("UnusedMainParameter") args: Array<String>) {
 class SaveTwitterTL {
 
     private lateinit var conn: Connection
-    private lateinit var stmt: Statement
 
     @Throws(ClassNotFoundException::class, IOException::class, SQLException::class)
     fun main() {
@@ -43,7 +41,6 @@ class SaveTwitterTL {
             try {
                 timer.cancel()
                 timer.purge()
-                stmt.close()
                 conn.close()
             } catch (e: SQLException) {
             }
@@ -61,10 +58,11 @@ class SaveTwitterTL {
         val prop = Properties()
         prop["foreign_keys"] = "on"
         conn = DriverManager.getConnection("jdbc:sqlite:$location", prop)
-        stmt = conn.createStatement()
+        val stmt = conn.createStatement()
         stmt.execute("CREATE TABLE IF NOT EXISTS userlist(id INTEGER UNIQUE, screen_name TEXT)")
         stmt.execute("CREATE TABLE IF NOT EXISTS vialist(id INTEGER PRIMARY KEY AUTOINCREMENT, via TEXT UNIQUE)")
         stmt.execute("CREATE TABLE IF NOT EXISTS tweets(content TEXT, user_id INTEGER NOT NULL, date TEXT, via_id INTEGER NOT NULL, medias TEXT, tweetId INTEGER UNIQUE, FOREIGN KEY (user_id) REFERENCES userlist(id), FOREIGN KEY (via_id) REFERENCES vialist(id))")
+        stmt.close()
     }
 
     private fun prepareTwitter(): Twitter {
@@ -100,28 +98,41 @@ class SaveTwitterTL {
     }
 
     private fun insertTweet(user: User, content: String, date: String, via: String, medias: String, tweetId: Long) {
-        val sql = "INSERT INTO tweets VALUES(" +
-                "'${content.replace("'", "''")}'," +
-                "${user.id}," +
-                "'$date'," +
-                "(SELECT id FROM vialist WHERE via = '${via.replace("'", "''")}')," +
-                "'${medias.replace("'", "''")}'," +
-                "$tweetId" +
-                ")"
+        val sql = "INSERT INTO tweets VALUES(?, ?, ?," +
+                "(SELECT id FROM vialist WHERE via = ?)," +
+                "?, ?)"
         for (i in 0..4) {
             try {
-                stmt.execute(sql)
+                conn.prepareStatement(sql).apply {
+                    setString(1, content)
+                    setLong(2, user.id)
+                    setString(3, date)
+                    setString(4, via)
+                    setString(5, medias)
+                    setLong(6, tweetId)
+                    execute()
+                    close()
+                }
                 break
             } catch (e: SQLException) {
                 if (e.errorCode == 19) {
-                    val addUser = "INSERT INTO userlist VALUES(${user.id}, '${user.screenName.replace("'", "''")}')"
-                    val addVia = "INSERT INTO vialist(via) VALUES('${via.replace("'", "''")}')"
                     try {
-                        stmt.execute(addUser)
+                        val addUser = "INSERT INTO userlist VALUES(?, ?)"
+                        conn.prepareStatement(addUser).apply {
+                            setLong(1, user.id)
+                            setString(2, user.screenName)
+                            execute()
+                            close()
+                        }
                     } catch (e1: SQLException) {
                     }
                     try {
-                        stmt.execute(addVia)
+                        val addVia = "INSERT INTO vialist(via) VALUES(?)"
+                        conn.prepareStatement(addVia).apply {
+                            setString(1, via)
+                            execute()
+                            close()
+                        }
                     } catch (e1: SQLException) {
                     }
                 } else {
