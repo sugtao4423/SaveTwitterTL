@@ -2,7 +2,6 @@ package sugtao4423.savetwittertl
 
 import twitter4j.MediaEntity
 import twitter4j.Status
-import java.util.*
 
 class TwitterMediaUtil(status: Status) {
 
@@ -16,8 +15,7 @@ class TwitterMediaUtil(status: Status) {
 
         status.mediaEntities?.map {
             if (it.isVideoOrGif()) {
-                val videoUrl = getVideoURLsSortByBitrate(status.mediaEntities)
-                if (videoUrl != null) {
+                getVideoUrlSortByBitrate(status.mediaEntities)?.let { videoUrl ->
                     mediaUrls.add(videoUrl)
                 }
             } else {
@@ -31,29 +29,29 @@ class TwitterMediaUtil(status: Status) {
         }
     }
 
-    private fun getVideoURLsSortByBitrate(mediaEntities: Array<MediaEntity>): String? {
-        val videos = ArrayList<VideoURLs>()
+    private fun getVideoUrlSortByBitrate(mediaEntities: Array<MediaEntity>): String? {
+        val mp4 = ArrayList<VideoUrl>()
+        val webm = ArrayList<VideoUrl>()
         mediaEntities.map {
             if (it.isVideoOrGif()) {
                 it.videoVariants.map { variant ->
-                    if (variant.isMP4()) {
-                        videos.add(VideoURLs(variant.bitrate, variant.url))
+                    val videoUrl = VideoUrl(variant.bitrate, variant.url)
+                    when {
+                        variant.isMP4() -> mp4.add(videoUrl)
+                        variant.isWebm() -> webm.add(videoUrl)
+                        else -> false
                     }
                 }
-                if (videos.isEmpty()) {
-                    it.videoVariants.map { variant ->
-                        if (variant.isMP4() || variant.isWebm()) {
-                            videos.add(VideoURLs(variant.bitrate, variant.url))
-                        }
-                    }
-                }
-                videos.sort()
+                mp4.sort()
+                webm.sort()
             }
         }
-        return if (videos.isEmpty()) {
-            null
-        } else {
-            videos.last().url
+
+        return when {
+            (mp4.isEmpty() && webm.isEmpty()) -> null
+            mp4.isNotEmpty() -> mp4.last().url
+            webm.isNotEmpty() -> webm.last().url
+            else -> null
         }
     }
 
@@ -69,11 +67,11 @@ class TwitterMediaUtil(status: Status) {
         return (this.contentType == "video/webm")
     }
 
-    private data class VideoURLs(
+    private data class VideoUrl(
         val bitrate: Int,
         val url: String
-    ) : Comparable<VideoURLs> {
-        override fun compareTo(other: VideoURLs): Int {
+    ) : Comparable<VideoUrl> {
+        override fun compareTo(other: VideoUrl): Int {
             return this.bitrate - other.bitrate
         }
     }
