@@ -1,6 +1,9 @@
 package sugtao4423.savetwittertl
 
-import twitter4j.*
+import twitter4j.Status
+import twitter4j.Twitter
+import twitter4j.TwitterFactory
+import twitter4j.User
 import twitter4j.auth.AccessToken
 import twitter4j.conf.ConfigurationBuilder
 import java.io.File
@@ -77,12 +80,7 @@ class SaveTwitterTL {
     }
 
     private fun onTweet(status: Status) {
-        var notSave = false
-        Config.NOT_SAVE_USER.map {
-            if (it == status.user.screenName) {
-                notSave = true
-            }
-        }
+        val notSave = Config.NOT_SAVE_USER.contains(status.user.screenName)
         if (notSave) {
             return
         }
