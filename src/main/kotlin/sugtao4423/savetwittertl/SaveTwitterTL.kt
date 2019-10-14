@@ -92,7 +92,7 @@ class SaveTwitterTL {
         val mediaUtil = TwitterMediaUtil(status)
         val content = mediaUtil.content
         val mediaUrls = mediaUtil.mediaUrls
-        val medias = implode(mediaUrls, ",")
+        val medias = mediaUrls.joinToString(",")
         val date = SimpleDateFormat("yyyy/MM/dd HH:mm:ss Z").format(status.createdAt)
         val via = status.source.replace(Regex("<.+?>"), "")
 
@@ -132,18 +132,6 @@ class SaveTwitterTL {
                     break
                 }
             }
-        }
-    }
-
-    private fun implode(list: ArrayList<String>, glue: String): String {
-        return if (list.isEmpty()) {
-            ""
-        } else {
-            val sb = StringBuilder()
-            list.map {
-                sb.append(glue).append(it)
-            }
-            sb.substring(glue.length)
         }
     }
 
