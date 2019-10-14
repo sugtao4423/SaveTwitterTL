@@ -1,6 +1,7 @@
 package sugtao4423.savetwittertl
 
 import twitter4j.*
+import java.text.SimpleDateFormat
 import java.util.*
 
 class AutoLoadTLTask(private val twitter: Twitter, private val listAsTL: Long, private val listener: OnStatusListener) :
@@ -20,13 +21,20 @@ class AutoLoadTLTask(private val twitter: Twitter, private val listAsTL: Long, p
         }
     }
 
+    private fun log(message: String){
+        val date = SimpleDateFormat("yyyy/MM/dd HH:mm:ss Z").format(Date())
+        println("$date: $message")
+    }
+
     override fun run() {
         try {
             val statuses = ArrayList<Status>()
             if (listAsTL < 0) {
                 statuses.addAll(twitter.getHomeTimeline(getPaging(1)))
+                log("got home timeline")
             } else {
                 statuses.addAll(twitter.getUserListStatuses(listAsTL, getPaging(1)))
+                log("got list timeline. page 1")
 
                 for (i in 2..10) {
                     if (statuses.isEmpty()) {
@@ -37,6 +45,7 @@ class AutoLoadTLTask(private val twitter: Twitter, private val listAsTL: Long, p
                         break
                     }
                     statuses.addAll(twitter.getUserListStatuses(listAsTL, getPaging(i)))
+                    log("got list timeline. page $i")
                 }
             }
 
