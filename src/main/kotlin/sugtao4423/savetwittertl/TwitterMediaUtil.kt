@@ -15,7 +15,7 @@ class TwitterMediaUtil(status: Status) {
         }
 
         status.mediaEntities?.map {
-            if (isVideoOrGif(it)) {
+            if (it.isVideoOrGif()) {
                 val videoUrl = getVideoURLsSortByBitrate(status.mediaEntities)
                 if (videoUrl != null) {
                     mediaUrls.add(videoUrl)
@@ -34,15 +34,15 @@ class TwitterMediaUtil(status: Status) {
     private fun getVideoURLsSortByBitrate(mediaEntities: Array<MediaEntity>): String? {
         val videos = ArrayList<VideoURLs>()
         mediaEntities.map {
-            if (isVideoOrGif(it)) {
+            if (it.isVideoOrGif()) {
                 it.videoVariants.map { variant ->
-                    if (variant.contentType == "video/mp4") {
+                    if (variant.isMP4()) {
                         videos.add(VideoURLs(variant.bitrate, variant.url))
                     }
                 }
                 if (videos.isEmpty()) {
                     it.videoVariants.map { variant ->
-                        if (variant.contentType == "video/mp4" || variant.contentType == "video/webm") {
+                        if (variant.isMP4() || variant.isWebm()) {
                             videos.add(VideoURLs(variant.bitrate, variant.url))
                         }
                     }
@@ -57,8 +57,16 @@ class TwitterMediaUtil(status: Status) {
         }
     }
 
-    private fun isVideoOrGif(mediaEntity: MediaEntity): Boolean {
-        return (mediaEntity.type == "video" || mediaEntity.type == "animated_gif")
+    private fun MediaEntity.isVideoOrGif(): Boolean {
+        return (this.type == "video" || this.type == "animated_gif")
+    }
+
+    private fun MediaEntity.Variant.isMP4(): Boolean {
+        return (this.contentType == "video/mp4")
+    }
+
+    private fun MediaEntity.Variant.isWebm(): Boolean {
+        return (this.contentType == "video/webm")
     }
 
     private data class VideoURLs(
