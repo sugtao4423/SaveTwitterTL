@@ -7,38 +7,36 @@ class AutoLoadTLTask(private val twitter: Twitter, private val listAsTL: Long, p
     TimerTask() {
 
     interface OnStatusListener {
-        fun onStatus(statuses: ResponseList<Status>)
+        fun onStatus(statuses: List<Status>)
     }
 
     private var latestTweetId = -1L
 
+    private fun getPaging(page: Int): Paging {
+        return Paging(page, 200).also {
+            if (latestTweetId > 0) {
+                it.sinceId(latestTweetId - 1)
+            }
+        }
+    }
+
     override fun run() {
         try {
-            var paging = Paging(1, 200).also {
-                if (latestTweetId > 0) {
-                    it.sinceId(latestTweetId - 1)
-                }
-            }
-            var statuses: ResponseList<Status>
+            val statuses = ArrayList<Status>()
             if (listAsTL < 0) {
-                statuses = twitter.getHomeTimeline(paging)
+                statuses.addAll(twitter.getHomeTimeline(getPaging(1)))
             } else {
-                statuses = twitter.getUserListStatuses(listAsTL, paging)
+                statuses.addAll(twitter.getUserListStatuses(listAsTL, getPaging(1)))
 
                 for (i in 2..10) {
                     if (statuses.isEmpty()) {
                         break
                     }
                     if (isIncludeLatestTweetId(statuses)) {
-                        statuses = removeLatestTweet(statuses)
+                        removeLatestTweet(statuses)
                         break
                     }
-                    paging = Paging(i, 200).also {
-                        if (latestTweetId > 0) {
-                            it.sinceId(latestTweetId - 1)
-                        }
-                    }
-                    statuses.addAll(twitter.getUserListStatuses(listAsTL, paging))
+                    statuses.addAll(twitter.getUserListStatuses(listAsTL, getPaging(i)))
                 }
             }
 
@@ -51,7 +49,7 @@ class AutoLoadTLTask(private val twitter: Twitter, private val listAsTL: Long, p
         }
     }
 
-    private fun isIncludeLatestTweetId(statuses: ResponseList<Status>): Boolean {
+    private fun isIncludeLatestTweetId(statuses: ArrayList<Status>): Boolean {
         statuses.map {
             if (it.id == latestTweetId) {
                 return true
@@ -60,7 +58,7 @@ class AutoLoadTLTask(private val twitter: Twitter, private val listAsTL: Long, p
         return false
     }
 
-    private fun removeLatestTweet(statuses: ResponseList<Status>): ResponseList<Status> {
+    private fun removeLatestTweet(statuses: ArrayList<Status>) {
         statuses.sort()
         statuses.reverse()
         for (i in (statuses.size - 1) downTo 0) {
@@ -68,7 +66,6 @@ class AutoLoadTLTask(private val twitter: Twitter, private val listAsTL: Long, p
                 statuses.removeAt(i)
             }
         }
-        return statuses
     }
 
 }

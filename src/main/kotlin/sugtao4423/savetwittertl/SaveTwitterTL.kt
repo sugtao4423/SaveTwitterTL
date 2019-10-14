@@ -25,7 +25,7 @@ class SaveTwitterTL {
         val twitter = prepareTwitter()
 
         val onStatusListener = object : AutoLoadTLTask.OnStatusListener {
-            override fun onStatus(statuses: ResponseList<Status>) {
+            override fun onStatus(statuses: List<Status>) {
                 statuses.map {
                     if (!it.isRetweet) {
                         onTweet(it)
