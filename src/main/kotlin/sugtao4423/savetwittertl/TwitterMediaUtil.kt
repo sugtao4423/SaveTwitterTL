@@ -15,7 +15,7 @@ class TwitterMediaUtil(status: Status) {
 
         status.mediaEntities?.map {
             if (it.isVideoOrGif()) {
-                getVideoUrlSortByBitrate(status.mediaEntities)?.let { videoUrl ->
+                getHiBitrateVideoUrl(status.mediaEntities)?.let { videoUrl ->
                     mediaUrls.add(videoUrl)
                 }
             } else {
@@ -29,7 +29,7 @@ class TwitterMediaUtil(status: Status) {
         }
     }
 
-    private fun getVideoUrlSortByBitrate(mediaEntities: Array<MediaEntity>): String? {
+    private fun getHiBitrateVideoUrl(mediaEntities: Array<MediaEntity>): String? {
         val videos = ArrayList<VideoUrl>()
         mediaEntities.map {
             if (it.isVideoOrGif()) {
